@@ -40,28 +40,43 @@ SDL_Surface* global_keypress_surfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface* global_current_surface = NULL;
 
 int main(int argc, char* args[]) {
+
+	SDL_Renderer* renderer = SDL_CreateRenderer(global_window, -1, 0);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
+
 	if (!init()) {
 		printf("Failed to initialize!\n");
 	} else {
 		if (!load_media()) {
-			printf("Failed to laod media!\n");
+			printf("Failed to load media!\n");
 		} else {
 		
 			bool quit = false;
 
 			SDL_Event event;
 
+			SDL_Rect rect;
+			rect.x = 0;
+			rect.y = 0;
+			rect.w = image->w;
+			rect.h = image->h;
+
 			while (!quit) {
+
 				while (SDL_PollEvent(&event) != 0) {
 					if (event.type == SDL_QUIT) {
 						quit = true;
 					}
 				}
-				SDL_BlitSurface(image, NULL, global_screen_surface, NULL);
 
+				SDL_RenderClear(renderer);
+				SDL_RenderDrawRect(renderer, &rect);
+				SDL_RenderFillRect(renderer, &rect);
+				SDL_RenderPresent(renderer);
+
+				SDL_BlitSurface(image, NULL, global_screen_surface, NULL);
 				SDL_UpdateWindowSurface(global_window);
 			}
-
 		}
 	}
 
@@ -100,7 +115,7 @@ bool init() {
 bool load_media() {
 	bool success = true;
 
-	image = SDL_LoadBMP("assets/hello_world.bmp");
+	image = IMG_Load("assets/Characters/character_0000.png");
 	if (image == NULL) {
 		printf("Unable to laod image %s! SDL Error: %s\n", ".png", SDL_GetError());
 		success = false;
