@@ -44,20 +44,41 @@ int main(int argc, char* args[]) {
 		printf("Failed to load media!\n");
 	} else {
 	
-		bool quit = false;
+		bool is_game_running = false;
 
 		SDL_Event event;
 
 		SDL_Rect rect = {0, 0, 24, 24};
 
+		int velocity = 10;
+
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
 
-		while (!quit) {
+		while (!is_game_running) {
 
 			while (SDL_PollEvent(&event) != 0) {
 				if (event.type == SDL_QUIT) {
-					quit = true;
+					is_game_running = true;
 				}
+				if (event.type == SDL_KEYDOWN) {
+					if (event.key.keysym.sym == SDLK_UP) {
+						rect.y -= velocity;
+					}
+
+					if (event.key.keysym.sym == SDLK_DOWN) {
+						rect.y += velocity;
+					}
+
+					if (event.key.keysym.sym == SDLK_LEFT) {
+						rect.x -= velocity;
+					}
+
+					if (event.key.keysym.sym == SDLK_RIGHT) {
+						rect.x += velocity;
+					}
+
+				}
+				
 			}
 		
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -69,7 +90,6 @@ int main(int argc, char* args[]) {
 			SDL_RenderDrawRect(renderer, &rect);
 			SDL_RenderPresent(renderer);
 
-			//SDL_BlitSurface(image, &rect, global_screen_surface, &rect);
 			SDL_UpdateWindowSurface(window);
 		}
 	}
