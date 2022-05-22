@@ -21,6 +21,36 @@ SDL_Surface* image = NULL;
 
 SDL_Surface* global_current_surface = NULL;
 
+/**
+ *
+ *
+ */
+enum KeyCode {
+	Up, Down, Left, Right
+};
+
+bool key_state[4];
+
+/** Handle Vector positioning on the x-axis and y-axis
+ *@TODO: Possible refactor when other use cases are needed
+ *@TODO: Might add more fields if the need comes
+ */
+typedef struct Vector2D {
+	int64_t x, y;
+} Vector2D;
+
+bool load_media() {
+	bool success = true;
+
+	image = IMG_Load("assets/Characters/character_0000.png");
+	if (image == NULL) {
+		printf("Unable to laod image %s! SDL Error: %s\n", ".png", SDL_GetError());
+		success = false;
+	}
+
+	return success;
+}
+
 int main(int argc, char* args[]) {
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
