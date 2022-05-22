@@ -74,54 +74,123 @@ int main(int argc, char* args[]) {
 	if (!load_media()) {
 		printf("Failed to load media!\n");
 	} else {
-	
-		bool is_game_running = false;
+
+		uint64_t now = SDL_GetPerformanceCounter();
+		uint64_t last = 0;
+		uint64_t deltatime = 0;
+
+		bool running = false;
 
 		SDL_Event event;
 
 		SDL_Rect rect = {0, 0, 24, 24};
+		SDL_Rect rect1 = {0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1};
 
-		int velocity = 10;
+		Vector2D velocity = {8, 10};
+		Vector2D gravity = {0, 10};
 
-		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+		int max_jump = 300;
 
-		while (!is_game_running) {
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+		while (!running) {
+
+			last = now;
+			now = SDL_GetPerformanceCounter();
+			deltatime = ((now-last)*1000.0f / (double)SDL_GetPerformanceFrequency());
 
 			while (SDL_PollEvent(&event) != 0) {
-				if (event.type == SDL_QUIT) {
-					is_game_running = true;
+				switch(event.type) {
+					case SDL_KEYDOWN:
+						switch(event.key.keysym.sym) {
+							case SDLK_w:
+								key_state[Up] = true;
+								break;
+							case SDLK_s:
+								key_state[Down] = true;
+								break;
+							case SDLK_a:
+								key_state[Left] = true;
+								break;
+							case SDLK_d:
+								key_state[Right] = true;
+								break;
+						}
+						break;
+
+					case SDL_KEYUP:
+						switch(event.key.keysym.sym) {
+							case SDLK_w:
+								key_state[Up] = false;
+								break;
+							case SDLK_s:
+								key_state[Down] = false;
+								break;
+							case SDLK_a:
+								key_state[Left] = false;
+								break;
+							case SDLK_d:
+								key_state[Right] = false;
+								break;
+						}
+						break;
+						
+					case SDL_QUIT:
+						running = true;
+						break;
 				}
-				if (event.type == SDL_KEYDOWN) {
-					if (event.key.keysym.sym == SDLK_UP) {
-						rect.y -= velocity;
-					}
-
-					if (event.key.keysym.sym == SDLK_DOWN) {
-						rect.y += velocity;
-					}
-
-					if (event.key.keysym.sym == SDLK_LEFT) {
-						rect.x -= velocity;
-					}
-
-					if (event.key.keysym.sym == SDLK_RIGHT) {
-						rect.x += velocity;
-					}
-
-				}
-				
 			}
 		
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+			if (key_state[Up]) {
+				gravity.y = 0;
+			} 
+			
+			if (key_state[Down]) {
+				rect.y += gravity.y; 
+			}
+			
+			if (key_state[Left]) {
+				rect.x -= velocity.x;
+			}
+			
+			if (key_state[Right]) {
+				rect.x += velocity.x;
+			}
+		
+			if (rect.y < max_jump) {
+				gravity.y = 10;
+			}
+
+			if (gravity.y != 0) {
+				rect.y += gravity.y;
+			} else {
+				rect.y -= 10;
+			}
+
+			if (SDL_HasIntersection(&rect, &rect1)) {
+				rect.y = rect1.y-24;
+			}
+
+
+			//printf("[ %i %i %i %i ]\n", key_state[0], key_state[1], key_state[2], key_state[Right]);
+
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
 			SDL_RenderClear(renderer);
-
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
-
+		
+			// render rect
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
 			SDL_RenderDrawRect(renderer, &rect);
+		
+			// render rect
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderDrawRect(renderer, &rect1);
+
 			SDL_RenderPresent(renderer);
 
 			SDL_UpdateWindowSurface(window);
+
+			SDL_Delay(20);
 		}
 	}
 	
