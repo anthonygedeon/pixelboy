@@ -90,6 +90,8 @@ int main(int argc, char* args[]) {
 		Vector2D gravity = {0, 10};
 
 		int max_jump = 300;
+			
+		bool in_air = false;
 
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
@@ -140,9 +142,14 @@ int main(int argc, char* args[]) {
 						break;
 				}
 			}
-		
+			if (in_air) {
+				key_state[Up] = false;
+
+			}
+
 			if (key_state[Up]) {
 				gravity.y = 0;
+				in_air = true;
 			} 
 			
 			if (key_state[Down]) {
@@ -169,8 +176,8 @@ int main(int argc, char* args[]) {
 
 			if (SDL_HasIntersection(&rect, &rect1)) {
 				rect.y = rect1.y-24;
+				in_air = false;
 			}
-
 
 			//printf("[ %i %i %i %i ]\n", key_state[0], key_state[1], key_state[2], key_state[Right]);
 
