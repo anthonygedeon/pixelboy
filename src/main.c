@@ -86,7 +86,7 @@ int main(int argc, char* args[]) {
 
 		SDL_Event event;
 
-		Vector2D velocity = {8, 10};
+		Vector2D velocity = {5, 10};
 		Vector2D gravity = {0, 10};
 
 		int max_jump = 300;
@@ -98,14 +98,12 @@ int main(int argc, char* args[]) {
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
 		SDL_Texture* sprite = IMG_LoadTexture(renderer, "assets/Characters/character_0000.png");
-		SDL_Texture* sprite2 = IMG_LoadTexture(renderer, "assets/Characters/character_0001.png");
-		SDL_Texture* sprites[] = {sprite, sprite2};
 
 		while (!running) {
 
-			last = now;
-			now = SDL_GetPerformanceCounter();
-			deltatime = ((now-last)*1000.0f / (double)SDL_GetPerformanceFrequency());
+			uint32_t ticks = SDL_GetTicks();
+			uint32_t sprite_target = (ticks / 100) % 2;
+			SDL_Rect src_rect = {sprite_target * 24, 0, 24, 24};
 
 			while (SDL_PollEvent(&event) != 0) {
 				switch(event.type) {
@@ -190,7 +188,6 @@ int main(int argc, char* args[]) {
 			//printf("[ %i %i %i %i ]\n", key_state[0], key_state[1], key_state[2], key_state[Right]);
 
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
 			SDL_RenderClear(renderer);
 		
 			// render objects
@@ -199,10 +196,7 @@ int main(int argc, char* args[]) {
 				SDL_RenderDrawRect(renderer, &objects[i]);
 			}
 
-			//SDL_RenderCopy(renderer, sprite, NULL, &objects[0]);
-			SDL_RenderCopyEx(renderer, sprites[0], NULL, &objects[0], 0, 0, sprite_orientation);
-			for (int i = 0; i < LEN(sprites); i++) {
-			}
+			SDL_RenderCopyEx(renderer, sprite, &src_rect, &objects[0], 0, 0, sprite_orientation);
 
 			SDL_RenderPresent(renderer);
 
