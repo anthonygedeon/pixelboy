@@ -28,6 +28,9 @@ SDL_Rect objects[] = {
 	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
 };
 
+bool STATE_IDLE = false;
+bool STATE_RUNNING = false;
+
 /**
  *
  *
@@ -63,6 +66,8 @@ int main(int argc, char* args[]) {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
+
+	SDL_Rect srcrect_idle = {0, 0, 24, 24};
 	
 	SDL_Renderer* renderer = NULL;
 
@@ -164,10 +169,14 @@ int main(int argc, char* args[]) {
 			
 			if (key_state[Left]) {
 				objects[0].x -= velocity.x;
+				STATE_RUNNING = true;
+				STATE_IDLE = false;
 			}
 			
 			if (key_state[Right]) {
 				objects[0].x += velocity.x;
+				STATE_RUNNING = true;
+				STATE_IDLE = false;
 			}
 		
 			if (objects[0].y < max_jump) {
@@ -185,6 +194,14 @@ int main(int argc, char* args[]) {
 				in_air = false;
 			}
 
+			if (key_state[Up] == 0 
+					&& key_state[Down] == 0 
+					&& key_state[Left] == 0 
+					&& key_state[Right] == 0) {
+				STATE_IDLE = true;
+				STATE_RUNNING = false;
+			}
+
 			//printf("[ %i %i %i %i ]\n", key_state[0], key_state[1], key_state[2], key_state[Right]);
 
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -196,7 +213,13 @@ int main(int argc, char* args[]) {
 				SDL_RenderDrawRect(renderer, &objects[i]);
 			}
 
-			SDL_RenderCopyEx(renderer, sprite, &src_rect, &objects[0], 0, 0, sprite_orientation);
+			if (STATE_RUNNING) {
+				SDL_RenderCopyEx(renderer, sprite, &src_rect, &objects[0], 0, 0, sprite_orientation);
+			}
+
+			if (STATE_IDLE) {
+				SDL_RenderCopyEx(renderer, sprite, &srcrect_idle, &objects[0], 0, 0, sprite_orientation);
+			}
 
 			SDL_RenderPresent(renderer);
 
