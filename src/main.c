@@ -6,6 +6,8 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 
+#define LEN(x) (sizeof(x) / sizeof(x[0]))
+
 const int SCREEN_WIDTH = 940;
 const int SCREEN_HEIGHT = 480;
 const int FPS = 60;
@@ -20,6 +22,11 @@ SDL_Surface* global_screen_surface = NULL;
 SDL_Surface* image = NULL;
 
 SDL_Surface* global_current_surface = NULL;
+
+SDL_Rect objects[] = {
+	{0, 0, 24, 24}, 
+	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
+};
 
 /**
  *
@@ -57,8 +64,7 @@ int main(int argc, char* args[]) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 	
-	// image to load comment for now
-	//SDL_Surface* sprite = IMG_Load("assets/Characters/character_0000.png");
+	SDL_Renderer* renderer = NULL;
 
 	SDL_Window* window = SDL_CreateWindow(
 				"Pixel Platformer", 
@@ -67,9 +73,6 @@ int main(int argc, char* args[]) {
 				SCREEN_WIDTH, 
 				SCREEN_HEIGHT,
 				SDL_WINDOW_SHOWN);
-
-
-	SDL_Renderer* renderer = NULL;
 
 	if (!load_media()) {
 		printf("Failed to load media!\n");
@@ -83,17 +86,20 @@ int main(int argc, char* args[]) {
 
 		SDL_Event event;
 
-		SDL_Rect rect = {0, 0, 24, 24};
-		SDL_Rect rect1 = {0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1};
-
 		Vector2D velocity = {8, 10};
 		Vector2D gravity = {0, 10};
 
 		int max_jump = 300;
 			
 		bool in_air = false;
+		
+		SDL_RendererFlip sprite_orientation = SDL_FLIP_NONE;
 
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+		SDL_Texture* sprite = IMG_LoadTexture(renderer, "assets/Characters/character_0000.png");
+		SDL_Texture* sprite2 = IMG_LoadTexture(renderer, "assets/Characters/character_0001.png");
+		SDL_Texture* sprites[] = {sprite, sprite2};
 
 		while (!running) {
 
@@ -113,9 +119,11 @@ int main(int argc, char* args[]) {
 								break;
 							case SDLK_a:
 								key_state[Left] = true;
+								sprite_orientation = SDL_FLIP_NONE;
 								break;
 							case SDLK_d:
 								key_state[Right] = true;
+								sprite_orientation = SDL_FLIP_HORIZONTAL;
 								break;
 						}
 						break;
@@ -153,29 +161,29 @@ int main(int argc, char* args[]) {
 			} 
 			
 			if (key_state[Down]) {
-				rect.y += gravity.y; 
+				objects[0].y += gravity.y; 
 			}
 			
 			if (key_state[Left]) {
-				rect.x -= velocity.x;
+				objects[0].x -= velocity.x;
 			}
 			
 			if (key_state[Right]) {
-				rect.x += velocity.x;
+				objects[0].x += velocity.x;
 			}
 		
-			if (rect.y < max_jump) {
+			if (objects[0].y < max_jump) {
 				gravity.y = 10;
 			}
 
 			if (gravity.y != 0) {
-				rect.y += gravity.y;
+				objects[0].y += gravity.y;
 			} else {
-				rect.y -= 10;
+				objects[0].y -= 10;
 			}
 
-			if (SDL_HasIntersection(&rect, &rect1)) {
-				rect.y = rect1.y-24;
+			if (SDL_HasIntersection(&objects[0], &objects[1])) {
+				objects[0].y = objects[1].y-24;
 				in_air = false;
 			}
 
@@ -185,17 +193,18 @@ int main(int argc, char* args[]) {
 
 			SDL_RenderClear(renderer);
 		
-			// render rect
+			// render objects
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-			SDL_RenderDrawRect(renderer, &rect);
-		
-			// render rect
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-			SDL_RenderDrawRect(renderer, &rect1);
+			for (int i = 0; i < LEN(objects); i++) {
+				SDL_RenderDrawRect(renderer, &objects[i]);
+			}
+
+			//SDL_RenderCopy(renderer, sprite, NULL, &objects[0]);
+			SDL_RenderCopyEx(renderer, sprites[0], NULL, &objects[0], 0, 0, sprite_orientation);
+			for (int i = 0; i < LEN(sprites); i++) {
+			}
 
 			SDL_RenderPresent(renderer);
-
-			SDL_UpdateWindowSurface(window);
 
 			SDL_Delay(20);
 		}
