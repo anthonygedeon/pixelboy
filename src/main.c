@@ -22,6 +22,8 @@ SDL_Rect objects[] = {
 	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
 };
 
+SDL_Rect grid[0][0];
+
 void update();
 
 void draw();
@@ -38,6 +40,10 @@ enum KeyCode {
 };
 
 bool key_state[4];
+
+void create_grid(SDL_Rect grid[][]) {
+	
+}
 
 /** Handle Vector positioning on the x-axis and y-axis
 */
