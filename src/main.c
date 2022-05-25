@@ -136,6 +136,10 @@ int main(int argc, char* args[]) {
 		IMG_LoadTexture(renderer, "assets/Characters/character_0000.png"),
 	};
 
+	SDL_Rect cl;
+	int cl_width = 0;
+	bool is_mouse_up = false;
+
 	bool running = false;
 	while (!running) {
 
@@ -183,6 +187,19 @@ int main(int argc, char* args[]) {
 							key_state[Right] = false;
 							break;
 					}
+					break;
+
+				case SDL_MOUSEBUTTONDOWN: ;
+					is_mouse_up = false;
+					cl.x = event.button.x;
+					cl_width = cl.x;
+					cl.y = event.button.y;
+					cl.h = 1;
+					break;
+
+				case SDL_MOUSEBUTTONUP: ;
+					is_mouse_up = true;
+					cl.w = event.button.x - cl_width;
 					break;
 
 				case SDL_QUIT:
@@ -241,6 +258,12 @@ int main(int argc, char* args[]) {
 
 		SDL_SetRenderDrawColor(renderer, 22, 22, 22, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
+	
+		if (is_mouse_up) {
+
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderDrawRect(renderer, &cl);
+		}
 
 		SDL_SetRenderDrawColor(renderer, 44, 44, 44, SDL_ALPHA_OPAQUE);
 		for (int i = 0; i < SCREEN_HEIGHT; i++) {
