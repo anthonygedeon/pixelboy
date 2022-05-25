@@ -8,8 +8,11 @@
 
 #define LEN(x) (sizeof(x) / sizeof(x[0]))
 
-const int SCREEN_WIDTH = 940;
-const int SCREEN_HEIGHT = 480;
+#define SW 900
+#define SH 486
+
+const int SCREEN_WIDTH = SW;
+const int SCREEN_HEIGHT = SH;
 const int FPS = 60;
 
 const int CHARACTER_W = 24;
@@ -22,7 +25,7 @@ SDL_Rect objects[] = {
 	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
 };
 
-SDL_Rect grid[0][0];
+SDL_Rect grid[SH][SW] = {{}};
 
 void update();
 
@@ -41,8 +44,15 @@ enum KeyCode {
 
 bool key_state[4];
 
-void create_grid(SDL_Rect grid[][]) {
-	
+void create_grid(SDL_Rect grid[SH][SW]) {
+	for (int row = 0; row < (SCREEN_WIDTH / 18); row++) {
+		for (int col = 0; col < (SCREEN_HEIGHT / 18); col++) {
+			grid[row][col].x = row*18;
+			grid[row][col].y = col*18;
+			grid[row][col].w = 18;
+			grid[row][col].h = 18;
+		}
+	}
 }
 
 /** Handle Vector positioning on the x-axis and y-axis
@@ -99,6 +109,8 @@ int main(int argc, char* args[]) {
 	SDL_Rect srcrect_idle = {0, 0, 24, 24};
 
 	SDL_Renderer* renderer = NULL;
+
+	create_grid(grid);
 
 	SDL_Window* window = SDL_CreateWindow(
 			"Pixel Platformer", 
@@ -227,8 +239,15 @@ int main(int argc, char* args[]) {
 			STATE_RUNNING = false;
 		}
 
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+		SDL_SetRenderDrawColor(renderer, 22, 22, 22, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
+
+		SDL_SetRenderDrawColor(renderer, 44, 44, 44, SDL_ALPHA_OPAQUE);
+		for (int i = 0; i < SCREEN_HEIGHT; i++) {
+			for (int j = 0; j < SCREEN_WIDTH; j++) {
+				SDL_RenderDrawRect(renderer, &grid[i][j]);
+			}
+		}
 
 		// render objects
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
@@ -249,6 +268,7 @@ int main(int argc, char* args[]) {
 		SDL_Delay(20);
 	}
 
+    SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
