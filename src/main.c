@@ -22,6 +22,10 @@ SDL_Rect objects[] = {
 	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
 };
 
+void update();
+
+void draw();
+
 bool is_collision(SDL_Rect* objects);
 
 bool STATE_IDLE = false;
@@ -38,28 +42,32 @@ bool key_state[4];
 /** Handle Vector positioning on the x-axis and y-axis
 */
 typedef struct Vector2D {
+	// x and y direction
 	int64_t x, y;
 } Vector2D;
 
 /**
 */
 typedef struct sprite_sheet {
-	// 
+	// individual frames of the sprite sheet
 	SDL_Texture* frame;
 
-	//
+	// acts as a reference of what sprite we actually want to show
 	SDL_Rect  srcrect;
 	
-	//
+	// what to put on the the rect
 	SDL_Rect dstrect;
 	
-	//
+	// state for the orientation for the sprite
+	// @TODO this field does not belong in this struct
 	SDL_RendererFlip orientation;
 
 } sprite_sheet;
 
-/** Get the total amount of frames a sprite sheet has available. 
- * It divides the sprite width to the total width of the sprite sheet.
+ /** Divides the sprite width to the total width of the sprite sheet.
+  *
+  * @param sprite - sprite_sheet struct that holds data for sprite_sheet
+  * @return total frames in sprite sheet
  */
 uint64_t calculate_total_frames(sprite_sheet* sprite) {
 	int width;
