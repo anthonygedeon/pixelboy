@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <stdio.h>                                             
+#include <stdlib.h>
 #include <stdbool.h>
 
 #include <SDL2/SDL.h>
@@ -11,6 +12,8 @@
 #define SW 900
 #define SH 486
 
+int total_rects = 2;
+
 const int SCREEN_WIDTH = SW;
 const int SCREEN_HEIGHT = SH;
 const int FPS = 60;
@@ -20,10 +23,7 @@ const int CHARACTER_H = 24;
 
 SDL_Surface* load_surface(const char* path);
 
-SDL_Rect objects[] = {
-	{0, 0, 24, 24}, 
-	{0, SCREEN_HEIGHT-24, SCREEN_WIDTH, 1},
-};
+SDL_Rect* objects;
 
 SDL_Rect grid[SH][SW] = {{}};
 
@@ -31,7 +31,7 @@ void update();
 
 void draw();
 
-bool is_collision(SDL_Rect* objects);
+SDL_Rect is_collision(SDL_Rect* objects);
 
 bool STATE_IDLE = false;
 bool STATE_RUNNING = false;
@@ -95,12 +95,26 @@ uint64_t calculate_total_frames(sprite_sheet* sprite) {
 	return width / CHARACTER_W;
 }
 
-// @TODO checks collision of all objects in object[]
-bool is_collision(SDL_Rect* objects) {
-	return SDL_HasIntersection(&objects[0], &objects[1]);
+SDL_Rect is_collision(SDL_Rect* rects) {
+	for (int i = 0; i < total_rects; i++) {
+		if (SDL_HasIntersection(&rects[0], &rects[i])) {
+			return rects[i];
+		} 
+	}
 }
 
 int main(int argc, char* args[]) {
+	objects = malloc(sizeof(int) * 8);
+
+	objects[0].x = 0; 
+	objects[0].y = 0;
+	objects[0].w = 24;
+	objects[0].h = 24;
+
+	objects[1].x = 0;
+	objects[1].y = SCREEN_HEIGHT-(18*2)-2;
+	objects[1].w = SCREEN_WIDTH;
+	objects[1].h = 1;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -136,6 +150,9 @@ int main(int argc, char* args[]) {
 		IMG_LoadTexture(renderer, "assets/Characters/character_0000.png"),
 	};
 
+	SDL_Texture* ground_tile = IMG_LoadTexture(renderer, "assets/Tiles/tile_0022.png");
+	SDL_Texture* dirt_tile = IMG_LoadTexture(renderer, "assets/Tiles/tile_0122.png");
+	
 	SDL_Rect cl;
 	int cl_width = 0;
 	bool is_mouse_up = false;
@@ -198,8 +215,11 @@ int main(int argc, char* args[]) {
 					break;
 
 				case SDL_MOUSEBUTTONUP: ;
+					total_rects++;
 					is_mouse_up = true;
-					cl.w = event.button.x - cl_width;
+					cl.w = abs(event.button.x - cl_width);
+					objects = realloc(objects, sizeof(int) * 4 * total_rects);
+					objects[total_rects-1] = cl;
 					break;
 
 				case SDL_QUIT:
@@ -207,9 +227,9 @@ int main(int argc, char* args[]) {
 					break;
 			}
 		}
+
 		if (in_air) {
 			key_state[Up] = false;
-
 		}
 
 		if (key_state[Up]) {
@@ -243,9 +263,11 @@ int main(int argc, char* args[]) {
 			objects[0].y -= 10;
 		}
 
-		if (is_collision(objects)) {
-			objects[0].y = objects[1].y-24;
-			in_air = false;
+		for (int i = 1; i < total_rects; i++) {
+			if (SDL_HasIntersection(&objects[0], &objects[i])) {
+				objects[0].y = objects[i].y-24;
+				in_air = false;
+			}
 		}
 
 		if (key_state[Up] == 0 
@@ -258,12 +280,6 @@ int main(int argc, char* args[]) {
 
 		SDL_SetRenderDrawColor(renderer, 22, 22, 22, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
-	
-		if (is_mouse_up) {
-
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-			SDL_RenderDrawRect(renderer, &cl);
-		}
 
 		SDL_SetRenderDrawColor(renderer, 44, 44, 44, SDL_ALPHA_OPAQUE);
 		for (int i = 0; i < SCREEN_HEIGHT; i++) {
@@ -271,10 +287,15 @@ int main(int argc, char* args[]) {
 				SDL_RenderDrawRect(renderer, &grid[i][j]);
 			}
 		}
+		
+		if (is_mouse_up) {
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
+			SDL_RenderDrawRect(renderer, &cl);
+		}
 
 		// render objects
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-		for (int i = 0; i < LEN(objects); i++) {
+		for (int i = 0; i < total_rects; i++) {
 			SDL_RenderDrawRect(renderer, &objects[i]);
 		}
 
@@ -284,6 +305,13 @@ int main(int argc, char* args[]) {
 
 		if (STATE_IDLE) {
 			SDL_RenderCopyEx(renderer, sprite.frame, &srcrect_idle, &objects[0], 0, 0, sprite.orientation);
+		}
+		for (int i = 0; i < 50; i++) {
+			SDL_RenderCopy(renderer, ground_tile, NULL, &grid[i][25]);
+		}
+
+		for (int i = 0; i < 50; i++) {
+			SDL_RenderCopy(renderer, dirt_tile, NULL, &grid[i][26]);
 		}
 
 		SDL_RenderPresent(renderer);
