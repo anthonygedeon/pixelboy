@@ -25,8 +25,6 @@ SDL_Surface* load_surface(const char* path);
 
 SDL_Rect* objects;
 
-SDL_Rect grid[SH][SW] = {{}};
-
 void update();
 
 void draw();
@@ -43,17 +41,6 @@ enum KeyCode {
 };
 
 bool key_state[4];
-
-void create_grid(SDL_Rect grid[SH][SW]) {
-	for (int row = 0; row < (SCREEN_WIDTH / 18); row++) {
-		for (int col = 0; col < (SCREEN_HEIGHT / 18); col++) {
-			grid[row][col].x = row*18;
-			grid[row][col].y = col*18;
-			grid[row][col].w = 18;
-			grid[row][col].h = 18;
-		}
-	}
-}
 
 /** Handle Vector positioning on the x-axis and y-axis
 */
@@ -124,8 +111,6 @@ int main(int argc, char* args[]) {
 
 	SDL_Renderer* renderer = NULL;
 
-	create_grid(grid);
-
 	SDL_Window* window = SDL_CreateWindow(
 			"Pixel Platformer", 
 			SDL_WINDOWPOS_UNDEFINED, 
@@ -146,12 +131,19 @@ int main(int argc, char* args[]) {
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+
 	sprite_sheet sprite = {
 		IMG_LoadTexture(renderer, "assets/Characters/character_0000.png"),
 	};
 
 	SDL_Texture* ground_tile = IMG_LoadTexture(renderer, "assets/Tiles/tile_0022.png");
 	SDL_Texture* dirt_tile = IMG_LoadTexture(renderer, "assets/Tiles/tile_0122.png");
+
+	SDL_Rect tile_rect;
+	tile_rect.x = 0;
+	tile_rect.y = SCREEN_HEIGHT - (18*2);
+	tile_rect.w = 18;
+	tile_rect.h = 18;
 	
 	SDL_Rect cl;
 	int cl_width = 0;
@@ -281,13 +273,17 @@ int main(int argc, char* args[]) {
 		SDL_SetRenderDrawColor(renderer, 22, 22, 22, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
 
+		SDL_RenderCopy(renderer, ground_tile, NULL, &tile_rect);
 		SDL_SetRenderDrawColor(renderer, 44, 44, 44, SDL_ALPHA_OPAQUE);
-		for (int i = 0; i < SCREEN_HEIGHT; i++) {
-			for (int j = 0; j < SCREEN_WIDTH; j++) {
-				SDL_RenderDrawRect(renderer, &grid[i][j]);
-			}
+		for (int i = 0; i < (SCREEN_WIDTH/18); i++) {
+			SDL_RenderDrawLine(renderer, 0, i*18, SCREEN_WIDTH, i*18);
 		}
-		
+
+		SDL_SetRenderDrawColor(renderer, 44, 44, 44, SDL_ALPHA_OPAQUE);
+		for (int i = 0; i < (SCREEN_WIDTH/18); i++) {
+			SDL_RenderDrawLine(renderer, i*18, 0, i*18, SCREEN_HEIGHT);
+		}
+			
 		if (is_mouse_up) {
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
 			SDL_RenderDrawRect(renderer, &cl);
@@ -305,13 +301,6 @@ int main(int argc, char* args[]) {
 
 		if (STATE_IDLE) {
 			SDL_RenderCopyEx(renderer, sprite.frame, &srcrect_idle, &objects[0], 0, 0, sprite.orientation);
-		}
-		for (int i = 0; i < 50; i++) {
-			SDL_RenderCopy(renderer, ground_tile, NULL, &grid[i][25]);
-		}
-
-		for (int i = 0; i < 50; i++) {
-			SDL_RenderCopy(renderer, dirt_tile, NULL, &grid[i][26]);
 		}
 
 		SDL_RenderPresent(renderer);
