@@ -1,4 +1,4 @@
-#include <stdio.h>                                             
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -147,6 +147,7 @@ int main(int argc, char* args[]) {
 	
 	SDL_Rect cl;
 	int cl_width = 0;
+	int cl_height = 0;
 	bool is_mouse_up = false;
 
 	bool running = false;
@@ -203,13 +204,21 @@ int main(int argc, char* args[]) {
 					cl.x = event.button.x;
 					cl_width = cl.x;
 					cl.y = event.button.y;
+					cl_height = cl.y;
 					cl.h = 1;
 					break;
 
 				case SDL_MOUSEBUTTONUP: ;
 					total_rects++;
 					is_mouse_up = true;
-					cl.w = abs(event.button.x - cl_width);
+					cl.w = event.button.x - cl_width;
+					cl.h = event.button.y - cl_height;
+					if (cl.h > 1) {
+						cl.w = 1;
+					}
+					if (cl.w > 1) {
+						cl.h = 1;
+					}
 					objects = realloc(objects, sizeof(int) * 4 * total_rects);
 					objects[total_rects-1] = cl;
 					break;
